@@ -11,6 +11,7 @@ runSequence = require 'run-sequence'
 browserSync = require 'browser-sync'
 markdown = require 'gulp-markdown'
 ghpages = require 'gulp-gh-pages'
+wrap = require 'gulp-wrap'
 
 ###
   PATH
@@ -24,6 +25,10 @@ dstpath = join __dirname, './dist'
 gulp.task 'build', ->
   gulp
     .src "#{srcpath}/*.md"
+    .pipe wrap """
+    <link rel="stylesheet" href="http://jasonm23.github.io/markdown-css-themes/swiss.css">
+    <%= contents %>
+    """
     .pipe(markdown())
     .pipe browserSync.reload stream:true
     .pipe gulp.dest dstpath

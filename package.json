@@ -8,7 +8,8 @@
     "run-sequence": "*",
     "gulp-markdown": "*",
     "gulp-gh-pages": "*",
-    "browser-sync": "*"
+    "browser-sync": "*",
+    "gulp-wrap": "*"
   },
   "scripts": {
   },
