@@ -1,2 +1,69 @@
 <p><link rel="stylesheet" href="http://jasonm23.github.io/markdown-css-themes/swiss.css"></p>
 <h1 id="-12-angularjs-https-mooxe000-github-io-angularjstutorial_cn-"><a href="https://Mooxe000.github.io/AngularjsTutorial_cn">12. AngularJS 事件处理器</a></h1>
+<p>在这一步，你会在手机详细信息页面让手机图片可以点击。</p>
+<p>请重置工作目录：</p>
+<pre><code>git checkout -f step-10
+</code></pre><p>手机详细信息视图展示了一幅当前手机的大号图片，以及几个小一点的缩略图。如果用户点击缩略图就能把那张大的替换成自己那就更好了。现在我们来看看如何用AngularJS来实现它。</p>
+<p>步骤9和步骤10之间最重要的不同在下面列出。你可以在<a href="https://github.com/angular/angular-phonecat/compare/step-9...step-10">GitHub</a>里看到完整的差别。</p>
+<h3 id="-">控制器</h3>
+<p><strong>app/js/controllers.js</strong></p>
+<pre><code>...
+function PhoneDetailCtrl($scope, $routeParams, $http) {
+  $http.get(&#39;phones/&#39; + $routeParams.phoneId + &#39;.json&#39;).success(function(data) {
+    $scope.phone = data;
+    $scope.mainImageUrl = data.images[0];
+  });
+
+ $scope.setImage = function(imageUrl) {
+    $scope.mainImageUrl = imageUrl;
+  }
+}
+
+//PhoneDetailCtrl.$inject = [&#39;$scope&#39;, &#39;$routeParams&#39;, &#39;$http&#39;];
+</code></pre><p>在<code>PhoneDetailCtrl</code>控制器中，我们创建了<code>mainImageUrl</code>模型属性，并且把它的默认值设为第一个手机图片的URL。</p>
+<h3 id="-">模板</h3>
+<p><strong>app/partials/phone-detail.html</strong></p>
+<pre><code>&lt;img ng-src=&quot;{{mainImageUrl}}&quot; class=&quot;phone&quot;&gt;
+
+...
+
+&lt;ul class=&quot;phone-thumbs&quot;&gt;
+  &lt;li ng-repeat=&quot;img in phone.images&quot;&gt;
+    &lt;img ng-src=&quot;{{img}}&quot; ng-click=&quot;setImage(img)&quot;&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+...
+</code></pre><p>我们把大图片的<code>ngSrc</code>指令绑定到<code>mainImageUrl</code>属性上。</p>
+<p>同时我们注册一个<a href="http://code.angularjs.org/1.1.0/docs/api/ng.directive:ngClick">ngClick</a>处理器到缩略图上。当一个用户点击缩略图的任意一个时，这个处理器会使用<code>setImage</code>事件处理函数来把<code>mainImageUrl</code>属性设置成选定缩略图的URL。</p>
+<h3 id="-">测试</h3>
+<p>为了验证这个新特性，我们添加了两个端到端测试。一个验证主图片被默认设置成第一个手机图片。第二个测试点击几个缩略图并且验证主图片随之合理的变化。</p>
+<p><strong>test/e2e/scenarios.js</strong></p>
+<pre><code>...
+  describe(&#39;Phone detail view&#39;, function() {
+
+...
+
+    it(&#39;should display the first phone image as the main phone image&#39;, function() {
+      expect(element(&#39;img.phone&#39;).attr(&#39;src&#39;)).toBe(&#39;img/phones/nexus-s.0.jpg&#39;);
+    });
+
+    it(&#39;should swap main image if a thumbnail image is clicked on&#39;, function() {
+      element(&#39;.phone-thumbs li:nth-child(3) img&#39;).click();
+      expect(element(&#39;img.phone&#39;).attr(&#39;src&#39;)).toBe(&#39;img/phones/nexus-s.2.jpg&#39;);
+
+      element(&#39;.phone-thumbs li:nth-child(1) img&#39;).click();
+      expect(element(&#39;img.phone&#39;).attr(&#39;src&#39;)).toBe(&#39;img/phones/nexus-s.0.jpg&#39;);
+    });
+  });
+});
+</code></pre><p>你现在可以刷新你的浏览器，然后重新跑一遍端到端测试，或者你可以在<a href="http://angular.github.com/angular-phonecat/step-4/test/e2e/runner.html">AngularJS的服务器</a>上运行一下。</p>
+<h2 id="-">练习</h2>
+<p>为<code>PhoneDetailCtrl</code>添加一个新的控制器方法：</p>
+<pre><code>    $scope.hello = function(name) {
+        alert(&#39;Hello &#39; + (name || &#39;world&#39;) + &#39;!&#39;);
+    }
+</code></pre><p>并且添加：</p>
+<pre><code>    &lt;button ng-click=&quot;hello(&#39;Elmo&#39;)&quot;&gt;Hello&lt;/button&gt;
+</code></pre><p>   到<strong>phone-details.html</strong>模板。</p>
+<h2 id="-">总结</h2>
+<p>现在图片浏览器已经做好了，我们已经为<a href="http://angularjs.cn/A00e">步骤11</a>（最后一步啦！）做好了准备，我们会学习用一种更加优雅的方式来获取数据。</p>

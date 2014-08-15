@@ -1,2 +1,120 @@
 <p><link rel="stylesheet" href="http://jasonm23.github.io/markdown-css-themes/swiss.css"></p>
 <h1 id="-10-angularjs-https-mooxe000-github-io-angularjstutorial_cn-"><a href="https://Mooxe000.github.io/AngularjsTutorial_cn">10. AngularJS 更多模板</a></h1>
+<p>在这一步，你将实现手机详细信息视图，这个视图会在用户点击手机列表中的一部手机时被显示出来。</p>
+<p>请重置工作目录：</p>
+<pre><code>git checkout -f step-8
+</code></pre><p>现在当你点击列表中的一部手机之后，这部手机的详细信息页面就会被显示出来。</p>
+<p>为了实现手机详细信息视图我们将会使用<a href="http://code.angularjs.org/1.1.0/docs/api/ng.$http">$http</a>来获取数据，同时我们也要增添一个<code>phone-detail.html</code>视图模板。</p>
+<p>步骤7和步骤8之间最重要的不同在下面列出。你可以在<a href="https://github.com/angular/angular-phonecat/compare/step-7...step-8">GitHub</a>里看到完整的差别。</p>
+<h3 id="-">数据</h3>
+<p>除了<code>phones.json</code>，<code>app/phones/</code>目录也包含了每一部手机信息的json文件。</p>
+<p><strong>app/phones/nexus-s.json</strong>（样例片段）</p>
+<pre><code>{
+  &quot;additionalFeatures&quot;: &quot;Contour Display, Near Field Communications (NFC),...&quot;,
+  &quot;android&quot;: {
+      &quot;os&quot;: &quot;Android 2.3&quot;,
+      &quot;ui&quot;: &quot;Android&quot;
+  },
+  ...
+  &quot;images&quot;: [
+      &quot;img/phones/nexus-s.0.jpg&quot;,
+      &quot;img/phones/nexus-s.1.jpg&quot;,
+      &quot;img/phones/nexus-s.2.jpg&quot;,
+      &quot;img/phones/nexus-s.3.jpg&quot;
+  ],
+  &quot;storage&quot;: {
+      &quot;flash&quot;: &quot;16384MB&quot;,
+      &quot;ram&quot;: &quot;512MB&quot;
+  }
+}
+</code></pre><p>这些文件中的每一个都用相同的数据结构描述了一部手机的不同属性。我们会在手机详细信息视图中显示这些数据。</p>
+<h3 id="-">控制器</h3>
+<p>我们使用<code>$http</code>服务获取数据，以此来拓展我们的<code>PhoneListCtrl</code>。这和之前的手机列表控制器的工作方式是一样的。</p>
+<p><strong>app/js/controllers.js</strong></p>
+<pre><code>function PhoneDetailCtrl($scope, $routeParams, $http) {
+  $http.get(&#39;phones/&#39; + $routeParams.phoneId + &#39;.json&#39;).success(function(data) {
+    $scope.phone = data;
+  });
+}
+
+//PhoneDetailCtrl.$inject = [&#39;$scope&#39;, &#39;$routeParams&#39;, &#39;$http&#39;];
+</code></pre><p>为了构造HTTP请求的URL，我们需要<code>$route</code>服务提供的当前路由中抽取<code>$routeParams.phoneId</code>。</p>
+<h3 id="-">模板</h3>
+<p><strong>phone-detail.html</strong>文件中原有的TBD占位行已经被列表和构成手机详细信息的绑定替换掉了。注意到，这里我们使用AngularJS的<code>{{表达式}}</code>标记和<code>ngRepeat</code>来在视图中渲染数据模型。</p>
+<p><strong>app/partials/phone-detail.html</strong></p>
+<pre><code>&lt;img ng-src=&quot;{{phone.images[0]}}&quot; class=&quot;phone&quot;&gt;
+
+&lt;h1&gt;{{phone.name}}&lt;/h1&gt;
+
+&lt;p&gt;{{phone.description}}&lt;/p&gt;
+
+&lt;ul class=&quot;phone-thumbs&quot;&gt;
+  &lt;li ng-repeat=&quot;img in phone.images&quot;&gt;
+    &lt;img ng-src=&quot;{{img}}&quot;&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ul class=&quot;specs&quot;&gt;
+  &lt;li&gt;
+    &lt;span&gt;Availability and Networks&lt;/span&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;Availability&lt;/dt&gt;
+      &lt;dd ng-repeat=&quot;availability in phone.availability&quot;&gt;{{availability}}&lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/li&gt;
+    ...
+  &lt;/li&gt;
+    &lt;span&gt;Additional Features&lt;/span&gt;
+    &lt;dd&gt;{{phone.additionalFeatures}}&lt;/dd&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</code></pre><h3 id="-">测试</h3>
+<p>我们来写一个新的单元测试，这个测试和我们在步骤5中为<code>PhoneListCtrl</code>写的那个很像。</p>
+<p><strong>test/unit/controllersSpec.js</strong></p>
+<pre><code>...
+  describe(&#39;PhoneDetailCtrl&#39;, function(){
+    var scope, $httpBackend, ctrl;
+
+    beforeEach(inject(function(_$httpBackend_, $rootScope, $routeParams, $controller) {
+      $httpBackend = _$httpBackend_;
+      $httpBackend.expectGET(&#39;phones/xyz.json&#39;).respond({name:&#39;phone xyz&#39;});
+
+      $routeParams.phoneId = &#39;xyz&#39;;
+      scope = $rootScope.$new();
+      ctrl = $controller(PhoneDetailCtrl, {$scope: scope});
+    }));
+
+
+    it(&#39;should fetch phone detail&#39;, function() {
+      expect(scope.phone).toBeUndefined();
+      $httpBackend.flush();
+
+      expect(scope.phone).toEqual({name:&#39;phone xyz&#39;});
+    });
+  });
+...
+</code></pre><p>执行<code>./scripts/test.sh</code>脚本来执行测试，你应该会看到如下输出：</p>
+<pre><code>Chrome: Runner reset.
+...
+Total 3 tests (Passed: 3; Fails: 0; Errors: 0) (5.00 ms)
+  Chrome 19.0.1084.36 Mac OS: Run 3 tests (Passed: 3; Fails: 0; Errors 0) (5.00 ms)
+</code></pre><p>同时，我们也添加一个端到端测试，指向Nexus S手机详细信息页面并且验证页面的头部是“Nexus S”。</p>
+<p><strong>test/e2e/scenarios.js</strong></p>
+<pre><code>...
+  describe(&#39;Phone detail view&#39;, function() {
+
+    beforeEach(function() {
+      browser().navigateTo(&#39;../../app/index.html#/phones/nexus-s&#39;);
+    });
+
+
+    it(&#39;should display nexus-s page&#39;, function() {
+      expect(binding(&#39;phone.name&#39;)).toBe(&#39;Nexus S&#39;);
+    });
+  });
+...
+</code></pre><p>你现在可以刷新你的浏览器，然后重新跑一遍端到端测试，或者你可以在<a href="http://angular.github.com/angular-phonecat/step-4/test/e2e/runner.html">AngularJS的服务器</a>上运行一下。</p>
+<h2 id="-">练习</h2>
+<p>使用<a href="http://code.angularjs.org/1.1.0/docs/guide/dev_guide.e2e-testing">AngularJS端到端测试API</a>写一个测试，用它来验证我们在Nexus S详细信息页面显示的四个缩略图。</p>
+<h2 id="-">总结</h2>
+<p>现在手机详细页面已经就绪了，在<a href="http://angularjs.cn/A00c">步骤9</a>中我们将学习如何写一个显示过滤器。</p>
